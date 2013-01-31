@@ -1,0 +1,1075 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Orafce - Oracle 互換関数</title>
+	</head>
+
+<body>
+<center><img style="border: none; margin-left: auto; margin-right: auto; " src="http://pgfoundry.org/images/elephantSmall.png" height="75" width="75" />
+<hr />
+<h1>Orafce ホームページへようこそ</h1>
+<p>Oracle 互換関数</p>
+<hr />
+</center>
+<p>
+orafce の目的は Oracle Database で使用できる関数と互換性のある関数を PostgreSQL に実装することです。
+日付関数 (next_day, last_day, trunc, round, ...),
+文字列関数とパッケージ (DBMS_ALERT, DBMS_OUTPUT, UTL_FILE, DBMS_PIPE, ...)
+の大部分はすでに実装済みです。
+Oracle 10g と同様の動作をするよう検証されています。
+このモジュールは、Oracle から PostgreSQL へのデータベース移行で役に立ちます。
+</p>
+<p>
+この orafce プロジェクトは <a href="http://www.postgresql.org">PostgreSQL</a> コミュニティによる <a href="http://pgfoundry.org">pgFoundry</a> の中のプロジェクトです。
+</p>
+<ul>
+	<li><a href="http://pgfoundry.org/frs/?group_id=1000113">ダウンロード</a> : ソースコードのほか、Windows 用バイナリもダウンロードできます。</li>
+	<li><a href="http://pgfoundry.org/tracker/?group_id=1000113">バグレポート</a></li>
+	<li><a href="http://pgfoundry.org/mail/?group_id=1000113">メーリングリスト</a> への参加</li>
+</ul>
+
+<p>日本語以外のドキュメントは、下記のリンクを参照してください。</p>
+<ul>
+	<li><a href="http://www.pgsql.cz/index.php/Oracle_functionality_(en)">英語</a> (wiki)</li>
+	<li><a href="http://www.pgsql.cz/index.php/Oracle_functionality">チェコ語</a> (wiki)</li>
+</ul>
+
+<p>Oracle Database での動作については以下のリンクを参照してください。</p>
+<ul>
+	<li><a href="http://otndnld.oracle.co.jp/document/products/oracle10g/102/doc_cd/server.102/B19201-02/functions.html">Oracle 10g R2 : ファンクション</a></li>
+	<li><a href="http://www.shift-the-oracle.com/sql/functions/index-a.html">SHIFT the Oracle : 関数一覧</a></li>
+</ul>
+
+<hr />
+
+<ol>
+	<li><a href="#install">インストール</a></li>
+	<li><a href="#incompatibility">注意：互換性の無い箇所</a></li>
+	<li><a href="#general-functions">一般関数</a>
+		<ol>
+			<li><a href="#date-functions">日付関数</a>
+			<li><a href="#nlssort">nlssort 関数</a>
+			<li><a href="#string-functions">文字列関数</a>
+			<li><a href="#other-functions">その他の関数</a>
+		</ol>
+	</li>
+	<li><a href="#DBMS_ALERT">DBMS_ALERT</a>
+	<li><a href="#DBMS_OUTPUT">DBMS_OUTPUT</a>
+	<li><a href="#UTL_FILE">UTL_FILE</a>
+	<li><a href="#DBMS_PIPE">DBMS_PIPE</a>
+	<li><a href="#DBMS_ASSERT">DBMS_ASSERT</a>
+	<li><a href="#DBMS_UTILITY">DBMS_UTILITY</a>
+	<li><a href="#PLVision">PLVision フレームワーク</a>
+		<ol>
+			<li><a href="#PLVdate">PLVdate</a>
+			<li><a href="#PLVstr">PLVstr</a>
+			<li><a href="#PLVchr">PLVchr</a>
+			<li><a href="#PLVsubst">PLVsubst</a>
+			<li><a href="#PLVlex">PLVlex</a>
+			<li><a href="#PLUnit">PLUnit</a>
+		</ol>
+	</li>
+</ol>
+
+<hr />
+
+<h2 id="install">インストール</h2>
+<p>
+インストール方法は、一般的な PostgreSQL の contrib モジュールと同様です。
+orafce の書庫を contrib ディレクトリの中で展開し、orafce ディレクトリへ入ります。
+make, make install を行ってライブラリがインストールします。
+その後、データベースへ登録するために orafunc.sql スクリプトを実行します。
+</p>
+
+<pre><code>cp orafce-2.0.1-preview.tgz /usr/loca/src/pgsql/contrib
+cd /usr/local/src/pgsql/contrib
+tar xvfz orafce-2.0.8-pre.tgz
+cd orafce
+make
+make install
+# make installcheck
+psql mojedb
+\i orafunc.sql
+SELECT next_day(current_date,'saturday');</code></pre>
+
+<h2 id="incompatibility">注意：互換性の無い箇所</h2>
+<p>
+以下の処理に、Oracle との互換性が無いことが確認されています。
+これらは ToDo 項目でもあります。
+</p>
+<dl>
+	<dt>to_date() での spth 書式が存在しない。</dt>
+	<dd>現在 to_date() は PostgreSQL の関数を流用していますが、独自に再実装する必要があります。</dd>
+	<dt>to_date() での月、日のオーバーフローがエラーにならない。</dt>
+	<dd>例えば「13月」は、PostgreSQL では翌年1月になりますが、Oracle ではエラーになります。</dd>
+</dl>
+
+<h2 id="general-functions">一般関数</h2>
+<p>
+orafce は追加の一般関数を提供します。
+PostgreSQL が既にサポートしている関数については「<a href="http://www.postgresql.jp/document/current/html/functions.html">関数と演算子</a>」を参照して下さい。
+</p>
+
+<h3 id="date-functions">日付関数</h3>
+<p>
+orafce は追加の日付関数を提供します。
+PostgreSQL が既にサポートしている日付関数については「<a href="http://www.postgresql.jp/document/current/html/functions-datetime.html">日付/時刻関数と演算子</a>」を参照して下さい。
+</p>
+
+<pre><code>SELECT add_months(date '2005-05-31',1);  -- > 2005-06-30
+SELECT last_day(date '2005-05-24');      -- > 2005-05-31
+SELECT next_day(date '2005-05-24', 'monday'); -- > 2005-05-30
+SELECT next_day(date '2005-05-24', '月曜日'); -- > 2005-05-30
+SELECT next_day(date '2005-05-24', 2); -- > 2005-05-30
+SELECT months_between(date '1995-02-02', date '1995-01-01'); -- > 1.0322580645161
+SELECT trunc(date '2005-07-12', 'iw');   -- > 2005-07-11
+SELECT round(date '2005-07-12', 'yyyy'); -- > 2006-01-01</code></pre>
+
+<p>
+trunc(), round() 関数の引数の変換書式には、下記の表に示した書式が使用できます。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>Y,YY,YYY,YYYY,SYYY,SYEAR</td>
+<td>year</td>
+</tr><tr>
+<td>I,IY,IYY,IYYY</td>
+<td>iso year</td>
+</tr><tr>
+<td>Q</td>
+<td>quarter</td>
+</tr><tr>
+<td>WW</td>
+<td>week, the first day in week is the first day in year</td>
+</tr><tr>
+<td>IW</td>
+<td>week, the first day is Monday</td>
+</tr><tr>
+<td>W</td>
+<td>week, the first day is the first day in month</td>
+</tr><tr>
+<td>DAY,DY,D</td>
+<td>week, the first day is Sunday</td>
+</tr><tr>
+<td>MONTH,MON,MM,RM</td>
+<td>month</td>
+</tr><tr>
+<td>CC,SCC</td>
+<td>century</td>
+</tr><tr>
+<td>DDD,DD,J</td>
+<td>day</td>
+</tr><tr>
+<td>HH,HH12,HH24</td>
+<td>hour</td>
+</tr><tr>
+<td>MI</td>
+<td>minute</td>
+</tbody>
+</tr>
+</table>
+
+<p>
+関数で端数が丸められる場合、年の場合は 7月1日、月の場合は 16日、週の場合は木曜日が境界になります。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>add_months(date, integer) date</td>
+<td>Add n months 
+</tr><tr>
+<td>last_date(date) date</td>
+<td>月の最終日を返す。
+</tr><tr>
+<td>next_day(date, text) date</td>
+<td>第1引数の日付以降の、第2引数の曜日を返す。第2引数は曜日の名前を渡す (例: Thursday, 火曜日)</td>
+</tr><tr>
+<td>next_day(date, integer) date</td>
+<td>第1引数の日付以降の、第2引数の曜日を返す。第2引数は曜日の番号を渡す (1..7 = 日..土)</td>
+</tr><tr>
+<td>months_between(date, date) float8</td>
+<td>引数の日付の差を月単位で返す。月の日数は31日で計算されるが、月末同士の場合は差は整数になる。</td>
+</tr><tr>
+<td>trunc(date, text) date</td>
+<td>与えた変換書式に切り捨てる。</td>
+</tr><tr>
+<td>round(date, text) date</td>
+<td>与えた変換書式に切り上げる。</td>
+</tbody>
+</tr>
+</table>
+
+<h3 id="nlssort">nlssort 関数</h3>
+<p>
+ロケール (locale) に基づいた文字列の比較を行う場合、データベース (8.4～) またはデータベース・クラスタ (～8.3) 単位で同一のロケールを使用する必要があります。
+nlssort 関数を使用すると、文字列の比較ごとに異なるロケールを使用する (COLLATE) ことができます。
+使用するロケールは nlssort 関数の引数として渡すか、先に set_nls_sort で設定しておきます。
+</p>
+<p>
+設定するロケールは必ずサーバの文字エンコーディングと一致させてください。
+例えば、文字エンコーディングとして eucjp を使用している場合、ja_JP.utf-8 は不適切であり、ja_JP.eucJP を使う必要があります。
+</p>
+
+<pre><code>SELECT * FROM peoples ORDER BY nlsstring(surname, 'de_DE.UTF-8');
+SELECT set_nls_sort('cs_CZ.UTF-8');
+SELECT * FROM peoples ORDER BY nlsstring(surname);</code></pre>
+
+<h3 id="string-functions">文字列関数</h3>
+<p>
+PostgreSQL が既にサポートしている文字列関数については「<a href="http://www.postgresql.jp/document/current/html/functions-string.html">文字列関数と演算子</a>」を参照して下さい。
+</p>
+<p>
+これらの関数は Oracle からの移植の際にできる限りコードの書き換えを避けたい場合にのみ使用してください。
+より適切な方法は、標準SQLで規定されている関数に置き換えることです。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>instr (text, text, [int[, int]])</td>
+<td>部分文字列の位置を返す。</td>
+</tr><tr>
+<td>reverse (text)</td>
+<td>文字の並びを反転して返す。</td>
+</tr><tr>
+<td>oracle.substr (text, [int [,int]])</td>
+<td>部分文字列を返す（Oracle との互換性を向上）。</td>
+</tbody>
+</tr>
+</table>
+
+<p>
+oracle.substr() は pg_catalog.substr() を残したままインストールされます。
+デフォルトのスキーマ検索の順序では pg_catalog のほうが優先度が高いため、orafce 版の substr() を使うためには
+設定パラメータ search_path を 'oracle, pg_catalog, "$user", public' と変更する必要があります。
+</p>
+
+<h3 id="other-functions">その他の関数</h3>
+<p>
+nvl() や decode() は、Oracle からの移植の際にできる限りコードの書き換えを避けたい場合にのみ使用してください。
+より適切な方法は、標準SQLで規定されている COALESCE や CASE に置き換えることです。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>nvl (anyelement, anyalement)</td>
+<td>最初の非NULLの引数を返す。</td>
+</tr><tr>
+<td>nvl2 (anyelement, anyememet, anyelement)</td>
+<td>第1引数が非NULLの場合は第2引数を、さもなければ第3引数を返す。</td>
+</tr><tr>
+<td>lnnvl (boolean)</td>
+<td>第1引数が false または NULL の場合は true、さもなければ false を返す。</td>
+</tr><tr>
+<td>concat (anyelement, anyelement)</td>
+<td>文字列を連結する。|| 演算子とは異なり NULL を空文字として扱う。</td>
+</tr><tr>
+<td>decode (lhs, [rhs1, result1], ... , default = NULL)</td>
+<td>lhs = rhsN ならば resultN を返します。一致が無ければ default を返します。
+下記「<a href="#decode">decode()に関する注意</a>」も参照してください。
+</td>
+</tr><tr>
+<td>dump (data, format)</td>
+<td>data の内部表現を format 形式で返す。</td>
+</tr><tr>
+<td>bitand (bigint, bigint)</td>
+<td>ビット和を返す。&amp; 演算子と同じ。</td>
+</tr><tr>
+<td>sinh (float8)</td>
+<td>ハイパボリック・サイン。</td>
+</tr><tr>
+<td>cosh (float8)</td>
+<td>ハイパボリック・コサイン。</td>
+</tr><tr>
+<td>tanh (float8)</td>
+<td>ハイパボリック・タンジェント。</td>
+</tr><tr>
+<td>nanvl (float, float)</td>
+<td>第1引数が NaN で無ければその値を返す。NaN の場合は第2引数を返す。</td>
+</tr><tr>
+<td>to_multi_byte (text)</td>
+<td>シングルバイト(半角)の英数記号を対応するマルチバイト文字(全角)に変換します。</td>
+</tbody>
+</tr>
+</table>
+
+<p id="decode">
+<strong>decode()に関する注意</strong> : 
+decode() 関数は、任意の型を引数として与えることができます。
+しかし、PostgreSQL 母体の制限により、最初から全ての型を扱うことができません。
+予め char, varchar, text, integer, bigint, numeric, time, date, timestamp, timestamp with time zone については定義されていますが、これ以外の型を返却したい場合には、orafce のインストール後に定義を追加してください。
+circle 型に対応した、引数5個のバージョン decode() の定義を以下に示します。
+内部関数 ora_decode() 自体は任意の個数の任意の型に対応しており、引数の数や型によらず ora_decode を指定できます。
+詳しくは orafunc.sql の decode() の定義も参考にして下さい。
+</p>
+<pre>CREATE  FUNCTION decode(anyelement, anyelement, circle, anyelement, circle)
+RETURNS circle
+AS 'MODULE_PATHNAME', 'ora_decode'
+LANGUAGE C IMMUTABLE;
+</pre>
+
+<h2 id="DBMS_ALERT">DBMS_ALERT</h2>
+<p>
+このパッケージは非同期のアラートを扱います。
+この機能は PostgreSQL の <a href="http://www.postgresql.jp/document/current/html/sql-listen.html">LISTEN</a> / <a href="http://www.postgresql.jp/document/current/html/sql-notify.html">NOTIFY</a> と似ていますが、サーバ内でのみアラートを使用できます。
+</p>
+<p>
+このパッケージが <a href="#DBMS_PIPE">dbms_pipe</a> パッケージと異なる点は、複数の受信者に対してメッセージを送信できることです。
+dbms_pipe は 2つのセッション間の双方向通信に使用し、dbms_alert は1つのセッションから複数の別セッションへの単方向通信として使用するのに適しています。
+</p>
+
+<pre><code>-- session pavel
+pavel# SELECT dbms_alert.register('ahoj');
+pavel# SELECT * FROM dbms_alert.waitany(NULL);
+
+-- session root
+root# SELECT dbms_alert.signal('ahoj','Gertrudo');</code></pre>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>register (name text)</td>
+<td>名前 name のアラートを登録する。</td>
+</tr><tr>
+<td>remove (name text)</td>
+<td>名前 name のアラートを登録解除する。</td>
+</tr><tr>
+<td>removeall ()</td>
+<td>すべてのアラートを登録解除する。</td>
+</tr><tr>
+<td>signal (name text, message text)</td>
+<td>アラートを通知する。</td>
+</tr><tr>
+<td>waitany (OUT name text, OUT message text, OUT status integer, n float8)</td>
+<td>いずれかのアラートが通知されるまで最大 n 秒待機する。</td>
+</tr><tr>
+<td>waitone (name text, OUT message text, OUT status integer, n float8)</td>
+<td>名前 name のアラートが通知されるまで最大 n 秒待機する。</td>
+</tr><tr>
+<td>set_defaults</td>
+<td>(未実装)</td>
+</tbody>
+</tr>
+</table>
+
+<p>
+メッセージは操作のたびに送信されます。
+これは、トランザクションの完了時に送信が行われる LISTEN / NOTIFY や Oracle での動作と異なります。
+動作の違いにより、以下のような問題が生じるかもしれません：
+</p>
+<ul>
+<li>メッセージを送信した後にトランザクションがロールバックした場合でも、受信者はメッセージを受け取る可能性があります。これを回避するには AFTER TRIGGER でメッセージを送信するようにします。</li>
+<li>メッセージを受信した直後では、送信者が行ったデータの変更が見えない可能性があります。送信者のトランザクションは、受信した時点ではまだコミットされていない場合があるためです。</li>
+</ul>
+
+<h2 id="DBMS_OUTPUT">DBMS_OUTPUT</h2>
+<p>
+このパッケージは Oracle の PL/SQL で使用される通知の機能を移植したものです。
+PostgreSQL の PL/pgSQL にも同様の機能として <a href="http://www.postgresql.jp/document/current/html/plpgsql-errors-and-messages.html">RAISE NOTICE</a> があります。
+</p>
+<p>
+PostgreSQL はプロトコル層で通知メッセージを扱えます。
+サーバが非同期メッセージを送信すると、クライアントはそのメッセージをすぐに受信します。
+そのため、Oracle での動作と比較するとメッセージを受けとるタイミングが異なる場合があります。
+(Oracle ではトランザクションの終了時にメッセージをまとめて受信します。)
+</p>
+
+<pre><code>-- new session
+SELECT dbms_output.enable();
+SELECT dbms_output.put_line('first_line');
+SELECT dbms_output.put_line('next_line');
+SELECT * from dbms_output.get_lines(0);
+
+-- new sesion
+SELECT dbms_output.serveroutput('on');
+SELECT dbms_output.put_line('first_line');</code></pre>
+
+<p>
+Oracle と同様に、複数のメッセージがある場合にはまとめて送信されます。
+受信者は 1回のシグナルで複数のメッセージを受信することになります。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>enable([buffer_size int4])</td>
+<td>このパッケージの機能を有効化する。</td>
+</tr><tr>
+<td>disable()</td>
+<td>このパッケージの機能を無効化する。</td>
+</tr><tr>
+<td>serveroutput(bool)</td>
+<td>クライアントへメッセージを送信するかを指定する。</td>
+</tr><tr>
+<td>put(text)</td>
+<td>文字列を追加する。</td>
+</tr><tr>
+<td>put_line(text)</td>
+<td>文字列と改行を追加する。</td>
+</tr><tr>
+<td>new_line()</td>
+<td>改行を追加する。</td>
+</tr><tr>
+<td>get_line(OUT line text, OUT status int4)</td>
+<td>バッファから1行読む。読めれば status に 0 を、さもなければ 1 を返す。</td>
+</tr><tr>
+<td>get_lines(OUT lines text[], INOUT numlines int4)</td>
+<td>バッファから lines 行読む。読めた行数を numlines に返す。</td>
+</tbody>
+</tr>
+</table>
+
+<h2 id="UTL_FILE">UTL_FILE</h2>
+<p>
+このパッケージはテキストファイルの操作（読み書き）を提供します。
+ファイルの操作はC言語のストリーム (FILE) 操作に似た形式です。
+ファイルの読み書きが可能なディレクトリを制限できるため、適切なアクセス制限を行っていればこのパッケージを利用してもセキュリティ上の問題はありません。
+</p>
+<ul>
+<li>予め utl_file.utl_file_dir テーブルでアクセスを許可するディレクトリのパスを指定する必要があります。
+<ul>
+	<li>指定したディレクトリと、それよりも下位のディレクトリへアクセスできるようになります。</li>
+	<li>Oracle と互換性の無い箇所です。Oracle では CREATE DIRECTORY を使用します。</li>
+</ul>
+</li>
+<li>提供する API は Oracle に倣っていますが若干の差異があり、PL/pgSQL での出力引数 (OUT, INOUT) の使い方が異なります。</li>
+<li>1セッションで最大50個のファイルを同時に開くことができます。</li>
+<li>テキストの1行の長さは最大で 32kB です。</li>
+<li>セッションを終了するとそのセッションで使用していたすべてのファイルは自動的に閉じられます。また、1個ずつまたはすべてのファイルを明示的に閉じることもできます。</li>
+</ul>
+
+<pre><code>CREATE OR REPLACE FUNCTION read_file(loc text, filename text)
+RETURNS SETOF text AS $$
+DECLARE
+  f utl_file.file_type;
+BEGIN
+  f := utl_file.fopen(loc, filename, 'r');
+  LOOP
+    RETURN NEXT utl_file.get_line(f);
+  END LOOP;
+EXCEPTION 
+  WITH NO_DATA_FOUND THEN
+    f := utl_file.fclose(f);
+    RETURN;
+  WITH OTHERS THEN
+    IF utl_file.is_open(f) THEN
+      f := utl_file.fclose(f);
+    END IF;
+    RAISE EXCEPTION '%', SQLERRM;
+END;
+$$ LANGUAGE plpgsql VOLATILE;</code></pre>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>fclose(file file_type) file_type</td>
+<td>指定したファイルを閉じ NULL を返す。</td>
+</tr><tr>
+<td>fclose_all()</td>
+<td>セッションで開いたすべてのファイルを閉じる。</td>
+</tr><tr>
+<td>fcopy(srcdir, srcname, dstdir, dstname, start_line = 1, end_line = NULL)</td>
+<td>ファイル srcdir/srcname を dstdir/dstname へコピーする。
+コピー範囲は行番号で与え、start_line ～ end_line の範囲である。</td>
+</tr><tr>
+<td>fflush(file file_type)</td>
+<td>バッファをディスクへフラッシュする。</td>
+</tr><tr>
+<td>fgetattr(location, filename) : OUT (fexists, file_length, blocksize)</td>
+<td>ファイル location/filename の存在有無とサイズ情報を取得する。</td>
+</tr><tr>
+<td>fopen(location, filename, mode [, max_linesize] [, encoding]) file file_type</td>
+<td>ファイル location/filename を開き、記述子を返す。
+mode は r:読み, w:書き, a:追記 のいずれかである。
+encoding はファイルの文字エンコーディングであり、省略時にはサーバエンコーディングを用いる (独自拡張)。
+エラーの際は例外が発生する。</td>
+</tr><tr>
+<td>frename(srcdir, srcname, dstdir, dstname, overwrite = false)</td>
+<td>ファイル srcdir/srcname を dstdir/dstname へ名前変更または移動する。</td>
+</tr><tr>
+<td>get_line(file file_type) text</td>
+<td>テキストファイルから1行読む。末尾の改行は返されない。
+行の長さがバッファ長 (デフォルト 1kB) よりも長い場合はバッファに保持可能な部分のみを返し、残りは次回の呼び出しで読まれる。
+ファイル末尾を越えて読もうとすると NO_DATA_FOUND 例外が発生する。</td>
+</tr><tr>
+<td>get_nextline(file file_type) text</td>
+<td>(独自関数) get_line と同様だが、ファイル末尾を越えて読もうとすると NULL を返す。</td>
+</tr><tr>
+<td>is_open(file file_type) boolean</td>
+<td>ファイルが開かれているか否かを返す。</td>
+</tr><tr>
+<td>new_line(file file_type, n = 1)</td>
+<td>改行を n 個追加する。</td>
+</tr><tr>
+<td>put(file file_type, buffer text)</td>
+<td>文字列を追加する。</td>
+</tr><tr>
+<td>put_line(file file_type, buffer text)</td>
+<td>文字列と改行を追加する。</td>
+</tr><tr>
+<td>putf(file file_type, format text, arg1..arg5 text)</td>
+<td>書式付き文字列を追加する。文字列 format 中の N 番目の %s は argN に置換される（最大5個)。</td>
+</tr>
+<td>tmpdir(file file_type) text</td>
+<td>(独自関数) 一時ディレクトリのパスを返す。</td>
+</tbody>
+</tr>
+</table>
+
+<h2 id="DBMS_PIPE">DBMS_PIPE</h2>
+<p>
+このパッケージは非同期のセッション間通信の機能を提供します。
+PostgreSQL 単体ではセッション間通信に相当する機能はありません。
+通信メッセージは空または任意の数の値を含みます。
+値は共有メモリの許す限りいくつでも含むことができます。
+このパッケージの用途は、試験 (デバッグレポートの転送) や、PL/pgSQL を使用するアプリケーションでクライアント･サーバ型のアーキテクチャを模すことです。
+作成可能なパイプには private と public の2種類があります。
+public パイプは誰でも操作することができます。
+</p>
+<p>
+同様にセッション間通信機能を提供する <a href="#DBMS_ALERT">dbms_alert</a> パッケージとの主な違いは以下です：
+</p>
+<ul>
+<li>複数のメッセージをまとめることはありません。</li>
+<li>操作の完了を待ちません。</li>
+<li>メッセージを受信できるのは1つのセッションのみです。</li>
+<li>メッセージは型情報を持ったまま転送されます。(送信セッションと受信セッションで文字エンコーディングが異なる場合、アプリケーションで変換を行う必要があります。)</li>
+</ul>
+
+<pre><code>-- Session A
+SELECT dbms_pipe.pack_message(CURRENT_DATE);
+SELECT dbms_pipe.pack_message('Servus, Rupert');
+SELECT dbms_pipe.send_message('boo',4,10);
+
+-- Session B
+SELECT dbms_pipe.receive_message('boo',4);
+SELECT dbms_pipe.unpack_message_date();
+SELECT dbms_pipe.unpack_message_text();</code></pre>
+
+<p>
+Oracle では OUT 引数の違いによる関数のオーバーロードが可能ですが、PostgreSQL ではできません。
+そのため、unpack_message 関数を、関数名の末尾に _text, _date, _timestamp, _number, _bytea, _record が追加された複数の関数に分割しています。
+</p>
+
+<p>
+RECORD 型を転送するサンプルコードを以下に示します。
+</p>
+
+<pre><code>CREATE TYPE info AS (x integer, y integer);
+
+CREATE OR REPLACE FUNCTION send_info(x int, y int)
+RETURNS void AS $$
+DECLARE i info;
+BEGIN i.x := x; i.y := y;
+  PERFORM dbms_pipe.pack_message(i);
+  PERFORM dbms_pipe.send_message('info');
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION get_info() 
+RETURNS info AS $$
+DECLARE i info;
+BEGIN
+  PERFORM dbms_pipe.receive_message('boo');
+  SELECT INTO i * FROM dbms_pipe.unpack_message_record() AS (x integer, y integer);
+  RETURN i;
+END;
+$$ LANGUAGE plpgsql;</code></pre>
+
+<p>Oracle と比較して以下の違いがあります。</p>
+<ul>
+<li>パイプの容量制限はバイト数ではなくメッセージ数で指定します。</li>
+<li>タイムアウト値が 0 のメッセージを送信できます。</li>
+<li>空のメッセージを送信できます。</li>
+<li>next_item_type 関数は TIMESTAMP (13) と RECORD(24) も返却します。</li>
+<li>RAW 型はサポートされません。代わりに BYTEA(23) が使用できます。</li>
+</ul>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>pack_message(value text|date|timestamp|numeric|record|bytea)</td>
+<td>データをローカルバッファへ送る。</td>
+</tr><tr>
+<td>unpack_message_text() text</td>
+<td>ローカルバッファから text を取り出す。</td>
+</tr><tr>
+<td>unpack_message_date() date</td>
+<td>ローカルバッファから date を取り出す。</td>
+</tr><tr>
+<td>unpack_message_timestamp() timestamp</td>
+<td>ローカルバッファから timestamp を取り出す。</td>
+</tr><tr> 
+<td>unpack_message_number() numeric</td>
+<td>ローカルバッファから numeric を取り出す。</td>
+</tr><tr>
+<td>unpack_message_record() record</td>
+<td>ローカルバッファから record を取り出す。具体的な型にキャストして使う。</td>
+</tr><tr>
+<td>unpack_message_bytea() bytea</td>
+<td>ローカルバッファから bytea を取り出す。</td>
+</tr><tr>
+<td>send_message(pipe text [,timeout int] [,limit int]) int</td>
+<td>ローカルバッファを名前 pipe のパイプを使って送信する。
+指定したパイプが存在しなければ新たに public パイプを作成する。
+正常に送信できれば 0 を、タイムアウトすれば 1 を返す。
+第2引数 timeout はタイムアウトを表し、秒単位で与える（デフォルトは無期限）。
+第3引数 limit はパイプが保持できる最大データ数である。</td>
+</tr><tr>
+<td>receive_message(pipe text [,timeout int]) int</td>
+<td>パイプからデータを受信する。
+正常に受信できれば 0 を、タイムアウトすれば 1 を返す。
+第2引数 timeout はタイムアウトを表し、秒単位で与える（デフォルトは無期限）。</td>
+</tr><tr>
+<td>create_pipe(pipe text, limit int [,private bool])<br>create_pipe(pipe text [,limit int])</td>
+<td>指定した属性を持つパイプを作成する。</td>
+</tr><tr>
+<td>remove_pipe(pipe text)</td>
+<td>パイプを削除する。</td>
+</tr><tr>
+<td>reset_buffer()</td>
+<td>送信または受信に使用するローカルバッファを空にする。</td>
+</tr><tr>
+<td>purge(pipe text)</td>
+<td>パイプを空にする。</td>
+</tr><tr>
+<td>next_item_type() int</td>
+<td>次のデータの型を取得する (0:次は無い, 9:numeric, 11:text, 12:date, 13:timestamp, 23:bytea, 24:record)</td>
+</tr><tr>
+<td>unique_session_name() text</td>
+<td>セッションの一意識別子を「PG$PIPE$id$pid」形式で返す。</td>
+</tbody>
+</tr>
+</table>
+
+<p>使用中のパイプの情報は dbms_pipe.db_pipes ビューから参照できます。</p>
+ 
+<pre><code>postgres=# SELECT * from dbms_pipe.db_pipes;
+ name | items | size | limit | private | owner
+------+-------+------+-------+---------+-------
+ boo  |     1 |   32 |       | f       |
+(1 row)</code></pre>
+
+<h2 id="DBMS_ASSERT">DBMS_ASSERT</h2>
+<p>
+このパッケージは SQL インジェクションを防ぐために使用されます。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>enquote_literal(varchar) varchar</td>
+<td>クォートを先頭と末尾に追加し、すべてのシングルクォートがペアになっていることを検証する。</td>
+</tr><tr>
+<td>enquote_name(varchar, boolean = false) varchar</td>
+<td>ダブルクォートを先頭と末尾に追加する。第2引数がtrueの場合には小文字に変換する。
+（注意：Oracleでは大文字に変換する。ダブルクォートされていない識別子を大文字／小文字のどちらで扱うかが DB 間で異なるため。）</td>
+</tr><tr>
+<td>noop(varchar) varchar</td>
+<td>引数をそのまま返す。</td>
+</tr><tr>
+<td>qualified_sql_name(varchar) varchar</td>
+<td>識別子として適切な書式かを検証する。</td>
+</tr><tr>
+<td>schema_name(varchar) varchar</td>
+<td>存在するスキーマ名かを検証する。</td>
+</tr><tr>
+<td>simple_sql_name(varchar) varchar</td>
+<td>単純な識別子として適切な書式かを検証する。</td>
+</tr><tr>
+<td>object_name(varchar) varchar</td>
+<td>存在するSQLオブジェクト名かを検証する。</td>
+</tbody>
+</tr>
+</table>
+
+<h2 id="DBMS_UTILITY">DBMS_UTILITY</h2>
+<p>コールスタックを取得する関数を提供します。</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>format_call_stack()</td>
+<td>コールスタックを複数行の文字列として返します。</td>
+</tbody>
+</tr>
+</table>
+
+<h2 id="PLVision">PLVision フレームワーク</h2>
+<p>
+このパッケージは PLVision フレームワーク (サードパーティ制の PL/SQL 拡張ライブラリ) を部分的に実装しています。
+</p>
+
+<h3 id="PLVdate">PLVdate</h2>
+<p>
+このパッケージはカレンダーを操作する関数を含みます。
+カレンダーは用途に応じて自由にカスタマイズできます（休日や土曜出勤など）。
+For convenience the distribution contents calendars for Bohemian, all neighbour countries and some other.
+Our own holidays or spare-time days can be input in the calendar. 
+</p>
+
+<pre><code>SELECT plvdate.plvdate.default_holydays('czech');
+SELECT plvdate.add_bizdays(CURRENT_DATE, 10); 
+SELECT plvdate.isbizday('2006-12-25');
+SELECT plvdate.set_nonbizday('Friday');</code></pre>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>add_bizdays(day date, days int) date</td>
+<td>Add n work days </td>
+</tr><tr>
+<td>nearest_bizday(day date) date</td>
+<td>Return the nearest work day </td>
+</tr><tr>
+<td>next_bizday(day date) date</td>
+<td>Return the next work day </td>
+</tr><tr>
+<td>bizdays_between(day1 date, day2 date) int</td>
+<td>Return the number of work days between day1 and day2 </td>
+</tr><tr>
+<td>prev_bizday(day date) date</td>
+<td>Return the previous work day </td>
+</tr><tr>
+<td>isbizday(date) bool</td>
+<td>Test if the day is work day </td>
+</tr><tr>
+<td>set_nonbizday(dow varchar)</td>
+<td>Set day of the week as spare-time day </td>
+</tr><tr>
+<td>unset_nonbizday(dow varchar)</td>
+<td>Set day of the year as work day </td>
+</tr><tr>
+<td>set_nonbizday(day date)</td>
+<td>Nastavi den v roce jako mimopracovni</td>
+</tr><tr>
+<td>unset_nonbizday(day date)</td>
+<td>Set day of the year as work day </td>
+</tr><tr>
+<td>set_nonbizday(day date, repeat bool)</td>
+<td>Set day as spare-day, if repeat is true, day is taken as holiday </td>
+</tr><tr>
+<td>use_easter()</td>
+<td>Calendar consider Easter </td>
+</tr><tr>
+<td>unuse_easter()</td>
+<td>Calendar does not consider Easter </td>
+</tr><tr>
+<td>use_easter(useit boolean)</td>
+<td></td>
+</tr><tr>
+<td>using_easter() bool</td>
+<td>Return true, if calendar consider Easter </td>
+</tr><tr>
+<td>include_start()</td>
+<td>bizdays_between consider the first day </td>
+</tr><tr>
+<td>noinclude_start()</td>
+<td></td>
+</tr><tr>
+<td>include_start(include boolean)</td>
+</td>
+<td></td>
+</tr><tr>
+<td>including_start() bool</td>
+<td>
+</tr><tr>
+<td>default_holydays(country text)</td>
+<td>Load the default calendar - czech, german, slovakia, ... </td>
+</tbody>
+</tr>
+</table>
+
+<h3 id="PLVstr">PLVstr</h2>
+<p>
+PLVision には数十個の文字列と文字を操作する関数が含まれますが、orafce モジュールはその中から一般的な関数のみを実装しています。
+含まないのは、PL 関数のソースコードを解析する関数などです。
+提供される関数で特徴的なのは、文字列中の位置として負の値をサポートすることです。
+位置として負の値を与えた場合、文字列の先頭からではなく、末尾から数えた位置を指定することになります。
+</p>
+
+<pre><code>plvstr.left('abcdef',2)      -> ab
+plvstr.left('abcdef',-2)     -> abcd
+plvstr.substr('abcdef',1,1)  -> a
+plvstr.substr('abcdef',-1,1) -> f
+plvstr.substr('abcde',-2,1)  -> d</code></pre>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+</tr><tr>
+<td>normalize(str text)</td>
+<td>White letters will be replaced by spaces, array of spaces wiil be replaced by one space. 
+</tr><tr>
+<td>is_prefix(str text, prefix text, cs bool)</td>
+<td>Return true, if the prefix is string str. prefix. Parameter cs - case sensitive 
+</tr><tr>
+<td>is_prefix(str text, prefix text)</td>
+<td>Return true, if the prefix is string str. prefix 
+</tr><tr>
+<td>is_prefix(str int, prefix int)</td>
+<td>Return true, if the prefix is number str prefix 
+</tr><tr>
+<td>is_prefix(str bigint, prefix bigint)</td>
+<td>Return true, if the prefix is number str prefix 
+</tr><tr>
+<td>substr(str text, start int, len int)</td>
+<td>Return symbol length beginning of start position  
+</tr><tr>
+<td>substr(str text, start int)</td>
+<td>Return string from the beginning to the end 
+</tr><tr>
+<td>instr(str text, patt text, start int, nth int)</td>
+<td>Search template in string, what nth appearance 
+</tr><tr>
+<td>instr(str text, patt text, start int)</td>
+<td>Search template in string 
+</tr><tr>
+<td>instr(str text, patt text)</td>
+<td>Search template in string 
+</tr><tr>
+<td>lpart(str text, div text, start int, nth int, all_if_notfound bool)</td>
+<td>Return letters on the left side from found pattern div, begin searching on start position, search nth pattern appearance, if all_if_notfound is true, return whole string after not founding pattern, otherwise return NULL 
+</tr><tr>
+<td>lpart(str text, div text, start int, nth int)</td>
+<td>Return letters on the left side from found pattern div, begin searching on start position, search nth pattern appearance 
+</tr><tr>
+<td>lpart(str text, div text, start int)</td>
+<td>Return letters on the right side from found pattern div, begin searching on start position 
+</tr><tr>
+<td>lpart(str text, div text)</td>
+<td>Return letters on the left side from found pattern div 
+</tr><tr>
+<td>rpart(str text, div text, start int, nth int, all_if_notfound bool)</td>
+<td>Return letters on the left side from found pattern div, begin searching on start position, search nth pattern appearance, if all_if_notfound is true, return whole string after not founding pattern, otherwise return NULL 
+</tr><tr>
+<td>rpart(str text, div text, start int, nth int)</td>
+<td>Return letters on the left side from found pattern div, begin searching on start position, search nth pattern appearance 
+</tr><tr>
+<td>rpart(str text, div text, start int)</td>
+<td>Return letters on the right side from found pattern div, begin searching on start position 
+</tr><tr>
+<td>rpart(str text, div text)</td>
+<td>Return letters on the left side from found pattern div 
+</tr><tr>
+<td>lstrip(str text, substr text, num int)</td>
+<td>Despatch n iteration of substr pattern on the left side of string 
+</tr><tr>
+<td>lstrip(str text, substr text)</td>
+<td>Despatch repeated substr pattern on the left side of string 
+</tr><tr>
+<td>rstrip(str text, substr text, num int)</td>
+<td>Despatch repeated substr pattern on the right side of string 
+</tr><tr>
+<td>rstrip(str text, substr text)</td>
+<td>Despatch repeated substr pattern on the right side of string 
+</tr><tr>
+<td>rvrs(str text, start int, _end int)</td>
+<td>Turn the part of string from start to _end round 
+</tr><tr>
+<td>rvrs(str text, start int)</td>
+<td>Turn the part of string from start position to end round 
+</tr><tr>
+<td>rvrs(str text)</td>
+<td>Turn string round 
+</tr><tr>
+<td>left(str text, n int)</td>
+<td>Return first n letter from the left side. If n is negative, return first to n letters from the right side 
+</tr><tr>
+<td>right(str text, n int)</td>
+<td>Return first n letter from the right side. If n is negative, return last to n letters from the left side
+</tbody>
+</tr>
+</table>
+
+<h3 id="PLVchr">PLVchr</h2>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>nth(str text, n int)</td>
+<td>Return n-th letter in string 
+</tr><tr>
+<td>first(str text)</td>
+<td>Return the first letter 
+</tr><tr>
+<td>last(str text)</td>
+<td>Return the last letter 
+</tr><tr>
+<td>is_blank(c int)</td>
+<td>Is the letter empty? 
+</tr><tr>
+<td>is_blank(c text)</td>
+<td>Is the letter empty? 
+</tr><tr>
+<td>is_digit(c int)</td>
+<td>Is the letter number? 
+</tr><tr>
+<td>is_digit(c text)</td>
+<td>Is the letter number? 
+</tr><tr>
+<td>is_quote(c int)</td>
+<td>Is the letter apostroph? 
+</tr><tr>
+<td>is_quote(c text)</td>
+<td>Is the letter apostroph? 
+</tr><tr>
+<td>is_other(c int)</td>
+<td>Is it anything else, not ASCII letter 
+</tr><tr>
+<td>is_other(c text)</td>
+<td>Is it anything else, not ASCII letter 
+</tr><tr>
+<td>is_letter(c int)</td>
+<td>Is the letter char? 
+</tr><tr>
+<td>is_letter(c text)</td>
+<td>Is the letter char? 
+</tr><tr>
+<td>char_name(c text)</td>
+<td>Return the name of letter, interesting especially for white letters 
+</tr><tr>
+<td>quoted1(str text)</td>
+<td>Insert text between  '''
+</tr><tr>
+<td>quoted2(str text)</td>
+<td>Insert text between '"' 
+</tr><tr>
+<td>stripped(str text, char_in text)</td>
+<td>Despatch char_in letters from string 
+</tbody>
+</tr>
+</table>
+
+<h3 id="PLVsubst">PLVsubst</h2>
+<p>
+このパッケージは文字列中のシンボルを置換する関数を提供します。
+用途としては、ヘルプ文字列、エラーメッセージ、ログなどの整形があります。
+置換するシンボルの初期値は '%s' ですが、セッションごとに変更することもできます。
+置換後の文字列は、配列または区切り文字 (初期値は ',') で連結した文字として与えます。
+</p>
+
+<pre><code>postgres=# SELECT plvsubst.string('My name is %s %s', ARRAY['Pavel','Sthule']);
+          string
+-------------------------
+ My name is Pavel Sthule
+(1 row)</code></pre>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>setsubst ([varchar = '%s'])</td>
+<td>Set substitute symbol valid in the session 
+</tr><tr>
+<td>subst ()</td>
+<td>Return valid substitute symbol 
+</tr><tr>
+<td>string (text, text[] [, text = '%s'])</td>
+<td>Substitute all substitute symbols by array members 
+</tr><tr>
+<td>string (text, text [, text = ',' [, text = '%s']])</td>
+<td>Substitute all substitute symbols by list members 
+</tbody>
+</tr>
+</table>
+
+<h3 id="PLVlex">PLVlex</h2>
+<p>
+このパッケージは1個の関数を含み、SQL 文字列のトークンを表として返します。
+code 値は PostgreSQL のバージョンごとに異なる値になる場合もあります。
+</p>
+
+<pre><code>
+postgres=# SELECT * FROM plvlex.tokens('SELECT t.* FROM tabulka t WHERE t.i = 10',true, true);
+ pos |  token  | code |  class  | separator | mod  
+-----+---------+------+---------+-----------+------
+   0 | select  |  527 | KEYWORD |           | 
+   7 | t       |      | IDENT   |           | 
+   8 | .       |   46 | OTHERS  |           | self
+   9 | *       |   42 | OTHERS  |           | self
+  11 | from    |  377 | KEYWORD |           | 
+  16 | tabulka |      | IDENT   |           | 
+  24 | t       |      | IDENT   |           | 
+  26 | where   |  591 | KEYWORD |           | 
+  32 | t.i     |      | IDENT   |           | 
+  36 | =       |   61 | OTHERS  |           | self
+  38 | 10      |      | NCONST  |           | i
+(11 rows)</code></pre>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>tokens (text, bool, bool)</td>
+<td>SQL の構文解析を行います。
+第2引数は空白をスキップするかを指定します。
+第3引数は qualified identifiers が生成されるかを指定します。
+</tbody>
+</tr>
+</table>
+
+<h3 id="PLUnit">PLUnit</h2>
+<p>
+このパッケージは診断（ユニットテスト）用の関数を含みます。
+</p>
+
+<table>
+<thead><tr><th>関数名</th><th>説明</th></tr></thead>
+<tbody>
+<tr>
+<td>assert_true(bool [, varchar])</td>
+<td>Asserts that the condition is true.  The optional message will be displayed if the assertion fails.  If not supplied, a default message is displayed. 
+</tr><tr>
+<td>assert_false(bool [, varchar])</td>
+<td>Asserts that the condition is false.  The optional message will be  displayed if the assertion fails.  If not supplied, a default message is displayed. 
+</tr><tr>
+<td>assert_null(anyelement [, varchar])</td>
+<td>Asserts that the actual is null.  The optional message will be  displayed if the assertion fails.  If not supplied, a default message is displayed. 
+</tr><tr>
+<td>assert_not_null(anyelement [, varchar])</td>
+<td>Asserts that the actual isn't null.  The optional message will be displayed if the assertion fails.  If not supplied, a default message  is displayed. 
+</tr><tr>
+<td>assert_equals(anyelement, anyelement [, double precision] [, varchar])</td>
+<td>Asserts that expected and actual are equal.  The optional message will be displayed if the assertion fails. If not supplied, a default message is displayed. Asserts that expected and actual are within the specified range. The optional message will be displayed if the assertion fails. If not supplied, a default message is displayed. 
+</tr><tr>
+<td>assert_not_equals(anyelement, anyelement [, double precision] [, varchar])</td>
+<td>Asserts that expected and actual are equal. The optional message will be displayed if the assertion fails.  If not supplied, a default message is displayed. Asserts that expected and actual are within the specified range. The optional message will be displayed if the assertion fails. If not supplied, a default message is displayed. 
+</tr><tr>
+<td>fail([varchar])</td>
+<td>Fail can be used to cause a test procedure to fail immediately using the supplied message. 
+</tr>
+</tbody>
+</table>
+
+<hr />
+
+<p>
+バグ、非互換性、関数やパッケージの追加要望は、<a href="http://pgfoundry.org/mail/?group_id=1000113">メーリングリスト</a> または <a href="http://pgfoundry.org/tracker/?group_id=1000113">フォーラム</a> へお願いします。
+</p>
+
+</body>
+</html>

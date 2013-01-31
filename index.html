@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+		<link rel="stylesheet" type="text/css" href="style.css" />
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<title>Orafce - Better Oracle functions support: Project Home Page</title>
+	</head>
+
+<body>
+<center><img style="border: none; margin-left: auto; margin-right: auto; " src="http://pgfoundry.org/images/elephantSmall.png" height="75" width="75" />
+<hr />
+<h1>Welcome to the Orafce Project Home Page</h1>
+<p>Better Oracle functions support</p>
+<hr />
+</center>
+<p>
+The goal of this project is to implemente some functions from Oracle database.
+Some date functions (next_day, last_day, trunc, round, ...), string functions and some modules (DBMS_ALERT, DBMS_OUTPUT, UTL_FILE, DBMS_PIPE, ...) are implemented now.
+Funcionality was verified on Oracle 10g and module is useful for production work.
+</p>
+<p>
+The Better Oracle functions supportproject is a <a href="http://www.postgresql.org">PostgreSQL</a> Community project that is a part of the <a href="http://pgfoundry.org">pgFoundry</a>.
+</p>
+<p>The GIT repository is available at <a href="http://git.postgresql.org/gitweb/?p=orafce.git;a=summary">http://git.postgresql.org/gitweb/?p=orafce.git;a=summary</a>.</p>
+<p>
+The pgFoundry page for the project is at <a href="http://pgfoundry.org/projects/orafce">http://pgfoundry.org/projects/orafce</a>, 
+where you can find downloads, documentation, bug reports, mailing lists, and a whole lot more.
+</p>
+
+<hr />
+<ul>
+	<li><a href="http://www.pgsql.cz/index.php/Oracle_functionality_(en)">English documentation</a> (wiki)</li>
+	<li><a href="http://www.pgsql.cz/index.php/Oracle_functionality">Czech documentation</a> (wiki)</li>
+	<li><a href="index-ja.html">Japanese documentation</a> (html)</li>
+</ul>
+<hr />
+
+<h2 id="incompatibility">NOTICE: Incompatibilities</h2>
+<p>
+There are some incompatible features already known. They might be ToDo items.
+</p>
+<dl>
+	<dt>to_date() doesn't support 'spth' format.</dt>
+	<dd>Currently we use PostgreSQL's implementation for to_date(), but it doesn't support the format.
+		We should re-implement to_date() in the orafce module.</dd>
+	<dt>to_date() doesn't raise errors when month or date are overflow.</dt>
+	<dd>For example, '13th month' is interpreted as Janualy in the next year in PostgreSQL,
+		but becomes errors in Oracle.</dd>
+</dl>
+
+<hr />
+
+<!-- PLEASE LEAVE "Powered By GForge" on your site -->
+<center>
+<a href="http://gforge.org/"><img src="http://gforge.org/images/pow-gforge.png" 
+alt="Powered By GForge Collaborative Development Environment" border="0" /></a>
+</center>
+
+</body>
+</html>
