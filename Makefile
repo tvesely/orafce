@@ -4,26 +4,20 @@ OBJS= convert.o file.o datefce.o magic.o others.o plvstr.o plvdate.o shmmc.o plv
 DATA_built = orafunc.sql
 DATA = uninstall_orafunc.sql 
 DOCS = README.orafunc COPYRIGHT.orafunc INSTALL.orafunc
-REGRESS = orafunc dbms_output files
+#REGRESS = orafunc dbms_output files
+REGRESS = gp-orafunk
 REGRESS_OPTS = --load-language=plpgsql
 
-EXTRA_CLEAN = sqlparse.c sqlparse.h sqlscan.c y.tab.c y.tab.h orafunc.sql.in
-
-ifndef USE_PGXS
-top_builddir = ../..
-makefile_global = $(top_builddir)/src/Makefile.global
-ifeq "$(wildcard $(makefile_global))" ""
-USE_PGXS = 1	# use pgxs if not in contrib directory
-endif
-endif
+EXTRA_CLEAN = sqlparse.c sqlparse.h sqlscan.c y.tab.c y.tab.h orafunc.sql orafunc.sql.in
 
 ifdef USE_PGXS
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
 else
-subdir = contrib/$(MODULE_big)
-include $(makefile_global)
+subdir = contrib/orafce
+top_builddir = ../../..
+include $(top_builddir)/src/Makefile.global
 include $(top_srcdir)/contrib/contrib-global.mk
 endif
 
@@ -34,10 +28,6 @@ else
 SHLIB_LINK += -L$(libdir)/gettextlib
 endif
 endif
-
-# remove dependency to libxml2 and libxslt
-LIBS := $(filter-out -lxml2, $(LIBS))
-LIBS := $(filter-out -lxslt, $(LIBS))
 
 plvlex.o: sqlparse.o
 
@@ -74,5 +64,7 @@ ifndef MAJORVERSION
 MAJORVERSION := $(basename $(VERSION))
 endif
 
-orafunc.sql.in:
-	cat orafunc-common.sql orafunc-$(MAJORVERSION).sql > orafunc.sql.in
+$(srcdir)/datefce.c: tdhfunc.c
+
+$(srcdir)/orafunc.sql.in: orafunc-gp.sql
+	cat $< > $@

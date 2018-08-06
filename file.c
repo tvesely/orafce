@@ -50,8 +50,8 @@ PG_FUNCTION_INFO_V1(utl_file_tmpdir);
 #define CUSTOM_EXCEPTION(msg, detail) \
 	ereport(ERROR, \
 		(errcode(ERRCODE_RAISE_EXCEPTION), \
-		 errmsg("%s", msg), \
-		 errdetail("%s", detail)))
+		 errmsg("%s",msg), \
+		 errdetail("%s",detail)))
 
 #define INVALID_FILEHANDLE_EXCEPTION()	CUSTOM_EXCEPTION(INVALID_FILEHANDLE, "Used file handle isn't valid.")
 
@@ -385,8 +385,8 @@ get_line(FILE *f, int max_linesize, int encoding, bool *iseof)
 Datum
 utl_file_get_line(PG_FUNCTION_ARGS)
 {
-	int		max_linesize;
-	int		encoding;
+	int		max_linesize = 0;
+	int		encoding = 0;
 	FILE   *f;
 	text   *result;
 	bool	iseof;
@@ -427,8 +427,8 @@ utl_file_get_line(PG_FUNCTION_ARGS)
 Datum
 utl_file_get_nextline(PG_FUNCTION_ARGS)
 {
-	int		max_linesize;
-	int		encoding;
+	int		max_linesize = 0;
+	int		encoding = 0;
 	FILE   *f;
 	text   *result;
 	bool	iseof;
@@ -518,8 +518,8 @@ static FILE *
 do_put(PG_FUNCTION_ARGS)
 {
 	FILE   *f;
-	int		max_linesize;
-	int		encoding;
+	int		max_linesize = 0;
+	int		encoding = 0;
 
 	CHECK_FILE_HANDLE();
 	f = get_stream(PG_GETARG_INT32(0), &max_linesize, &encoding);
@@ -605,8 +605,8 @@ utl_file_putf(PG_FUNCTION_ARGS)
 {
 	FILE   *f;
 	char   *format;
-	int		max_linesize;
-	int		encoding;
+	int		max_linesize = 0;
+	int		encoding = 0;
 	int		format_length;
 	char   *fpt;
 	int		cur_par = 0;
@@ -1072,7 +1072,7 @@ utl_file_tmpdir(PG_FUNCTION_ARGS)
 	char		tmpdir[MAXPGPATH];
 	int			ret;
 
-	ret = GetTempPathA(MAXPGPATH, tmpdir);
+	ret = GetTempPath(MAXPGPATH, tmpdir);
 	if (ret == 0 || ret > MAXPGPATH)
 		CUSTOM_EXCEPTION(INVALID_PATH, strerror(errno));
 

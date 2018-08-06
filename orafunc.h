@@ -42,6 +42,15 @@ int ora_mb_strlen1(text *str);
 extern Oid	equality_oper_funcid(Oid argtype);
 #endif
 
+#ifdef GP_VERSION_NUM
+#ifndef CStringGetTextDatum
+#define CStringGetTextDatum(s) PointerGetDatum(cstring_to_text(s))
+#endif
+char *
+text_to_cstring(const text *t);
+text *cstring_to_text(const char *c);
+text *cstring_to_text_with_len(const char *c, int n);
+#else
 #if PG_VERSION_NUM < 80400
 #define CStringGetTextDatum(c) \
         DirectFunctionCall1(textin, CStringGetDatum(c))
@@ -50,6 +59,7 @@ extern Oid	equality_oper_funcid(Oid argtype);
 #define cstring_to_text(c) \
         DatumGetTextP(CStringGetTextDatum(c))
 text *cstring_to_text_with_len(const char *c, int n);
+#endif
 #endif
 
 #if PG_VERSION_NUM < 80300
@@ -64,8 +74,6 @@ text *cstring_to_text_with_len(const char *c, int n);
 	att_align((cur_offset), (attalign))
 #define att_addlength_pointer(cur_offset, attlen, attptr) \
 	att_addlength((cur_offset), (attlen), (attptr))
-#define stringToQualifiedNameList(string) \
-	stringToQualifiedNameList((string), "")
 typedef void *SPIPlanPtr;
 #endif
 

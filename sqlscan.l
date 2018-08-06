@@ -6,7 +6,9 @@
 #include "postgres.h"
 #include "parser/keywords.h"
 
-
+#ifdef GP_VERSION_NUM
+#define YY_NO_INPUT 1
+#endif
 
 #undef yyparse  /* don't need it now and solve problems with 8.1 */
 
@@ -17,6 +19,30 @@
 #include "parser/scansup.h"      
 #include "mb/pg_wchar.h"
 
+#define unify_version(a,b,c) ((a<<16)+(b<<8)+c)
+
+/* simplified current version */
+#define YY_FLEX_FULL_VERSION \
+  unify_version(YY_FLEX_MAJOR_VERSION,YY_FLEX_MINOR_VERSION,YY_FLEX_SUBMINOR_VERSION)
+
+/* 
+ * Need to define these prototypes to shut GCC up. Flex fixes this from
+ * > 2.5.35
+ */
+#if YY_FLEX_FULL_VERSION < unify_version(2,5,35)
+int orafce_sql_yyget_lineno  (void);
+FILE *orafce_sql_yyget_in  (void);
+FILE *orafce_sql_yyget_out  (void);
+char *orafce_sql_yyget_text  (void);
+void orafce_sql_yyset_lineno (int  line_number );
+void orafce_sql_yyset_in (FILE *  in_str );
+void orafce_sql_yyset_out (FILE *  out_str );
+int orafce_sql_yyget_debug  (void);
+void orafce_sql_yyset_debug (int  bdebug );
+int orafce_sql_yylex_destroy  (void);
+int orafce_sql_yyget_leng(void);
+#endif
+
 #if PG_VERSION_NUM >= 80500
 extern PGDLLIMPORT const ScanKeyword ScanKeywords[];
 extern PGDLLIMPORT const int	NumScanKeywords;
@@ -24,9 +50,6 @@ extern PGDLLIMPORT const int	NumScanKeywords;
 #else
 #define ScanKeywordLookupArgs
 #endif
-
-#undef fprintf
-#define fprintf(file, fmt, msg)  ereport(ERROR, (errmsg_internal("%s", msg)))
 
 static int		xcdepth = 0;	/* depth of nesting in slash-star comments */
 static char    *dolqstart;      /* current $foo$ quote start string */
@@ -37,7 +60,15 @@ static bool extended_string = false;
 #define YY_READ_BUF_SIZE 16777216
 
 /* Avoid exit() on fatal scanner errors (a bit ugly -- see yy_fatal_error) */
-#define fprintf(file, fmt, msg)  ereport(ERROR, (errmsg_internal("%s", msg)))
+#undef fprintf
+#define fprintf(file, fmt, msg)  fprintf_to_ereport(fmt, msg)
+
+static void
+fprintf_to_ereport(const char *fmt, const char *msg)
+{
+	ereport(ERROR, (errmsg_internal("%s", msg)));
+}
+
 
 /* Handles to the buffer that the lexer uses internally */
 
@@ -612,7 +643,7 @@ other			.
 
 					BEGIN(INITIAL);
 					if (literallen == 0)
-						yyerror("zero-length delimited identifier");
+						yyerror(NULL, "zero-length delimited identifier");
 					ident = litbufdup();
 					if (literallen >= NAMEDATALEN)
 						truncate_identifier(ident, literallen, true);
@@ -728,7 +759,7 @@ other			.
 					 * a syntactic mistake anyway.
 					 */
 					if (nchars >= NAMEDATALEN)
-						yyerror("operator too long");
+						yyerror(NULL, "operator too long");
 
 					/* Convert "!=" operator to "<>" for compatibility */
 					yylval.val.modificator = NULL;
@@ -897,7 +928,7 @@ lexer_errposition(void)
  * be misleading!
  */
 void
-yyerror(const char *message)
+yyerror(List **result, const char *message)
 {
 	const char *loc = scanbuf + yylloc;
 
