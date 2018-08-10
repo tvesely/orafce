@@ -553,55 +553,55 @@ CREATE SCHEMA dbms_pipe;
 CREATE FUNCTION dbms_pipe.pack_message(text)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_text'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(text) IS 'Add text field to message';
 
 CREATE FUNCTION dbms_pipe.unpack_message_text()
 RETURNS text
 AS 'MODULE_PATHNAME','dbms_pipe_unpack_message_text'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unpack_message_text() IS 'Get text fiedl from message';
 
 CREATE FUNCTION dbms_pipe.receive_message(text, int)
 RETURNS int
 AS 'MODULE_PATHNAME','dbms_pipe_receive_message'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.receive_message(text, int) IS 'Receive message from pipe';
 
 CREATE FUNCTION dbms_pipe.receive_message(text)
 RETURNS int
 AS $$SELECT dbms_pipe.receive_message($1,NULL::int);$$
-LANGUAGE SQL VOLATILE;
+LANGUAGE SQL VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.receive_message(text) IS 'Receive message from pipe';
 
 CREATE FUNCTION dbms_pipe.send_message(text, int, int)
 RETURNS int
 AS 'MODULE_PATHNAME','dbms_pipe_send_message'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.send_message(text, int, int) IS 'Send message to pipe';
 
 CREATE FUNCTION dbms_pipe.send_message(text, int)
 RETURNS int
 AS $$SELECT dbms_pipe.send_message($1,$2,NULL);$$
-LANGUAGE SQL VOLATILE;
+LANGUAGE SQL VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.send_message(text, int) IS 'Send message to pipe';
 
 CREATE FUNCTION dbms_pipe.send_message(text)
 RETURNS int
 AS $$SELECT dbms_pipe.send_message($1,NULL,NULL);$$
-LANGUAGE SQL VOLATILE;
+LANGUAGE SQL VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.send_message(text) IS 'Send message to pipe';
 
 CREATE FUNCTION dbms_pipe.unique_session_name()
 RETURNS varchar
 AS 'MODULE_PATHNAME','dbms_pipe_unique_session_name'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unique_session_name() IS 'Returns unique session name';
 
 CREATE FUNCTION dbms_pipe.__list_pipes()
 RETURNS SETOF RECORD
 AS 'MODULE_PATHNAME','dbms_pipe_list_pipes'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.__list_pipes() IS '';
 
 CREATE VIEW dbms_pipe.db_pipes
@@ -610,115 +610,115 @@ AS SELECT * FROM dbms_pipe.__list_pipes() AS (Name varchar, Items int, Size int,
 CREATE FUNCTION dbms_pipe.next_item_type()
 RETURNS int
 AS 'MODULE_PATHNAME','dbms_pipe_next_item_type'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.next_item_type() IS 'Returns type of next field in message';
 
 CREATE FUNCTION dbms_pipe.create_pipe(text, int, bool)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_create_pipe'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.create_pipe(text, int, bool) IS 'Create named pipe';
 
 CREATE FUNCTION dbms_pipe.create_pipe(text, int)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_create_pipe_2'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.create_pipe(text, int) IS 'Create named pipe';
 
 CREATE FUNCTION dbms_pipe.create_pipe(text)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_create_pipe_1'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.create_pipe(text) IS 'Create named pipe';
 
 CREATE FUNCTION dbms_pipe.reset_buffer()
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_reset_buffer'
-LANGUAGE C VOLATILE;
+LANGUAGE C VOLATILE EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.reset_buffer() IS 'Clean input buffer';
 
 CREATE FUNCTION dbms_pipe.purge(text)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_purge'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.purge(text) IS 'Clean pipe';
 
 CREATE FUNCTION dbms_pipe.remove_pipe(text)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_remove_pipe'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.remove_pipe(text) IS 'Destroy pipe';
 
 CREATE FUNCTION dbms_pipe.pack_message(date)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_date'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(date) IS 'Add date field to message';
 
 CREATE FUNCTION dbms_pipe.unpack_message_date()
 RETURNS date
 AS 'MODULE_PATHNAME','dbms_pipe_unpack_message_date'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unpack_message_date() IS 'Get date field from message';
 
 CREATE FUNCTION dbms_pipe.pack_message(timestamp with time zone)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_timestamp'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(timestamp with time zone) IS 'Add timestamp field to message';
 
 CREATE FUNCTION dbms_pipe.unpack_message_timestamp()
 RETURNS timestamp with time zone
 AS 'MODULE_PATHNAME','dbms_pipe_unpack_message_timestamp'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unpack_message_timestamp() IS 'Get timestamp field from message';
 
 CREATE FUNCTION dbms_pipe.pack_message(numeric)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_number'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(numeric) IS 'Add numeric field to message';
 
 CREATE FUNCTION dbms_pipe.unpack_message_number()
 RETURNS numeric
 AS 'MODULE_PATHNAME','dbms_pipe_unpack_message_number'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unpack_message_number() IS 'Get numeric field from message';
 
 CREATE FUNCTION dbms_pipe.pack_message(integer)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_integer'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(integer) IS 'Add numeric field to message';
 
 CREATE FUNCTION dbms_pipe.pack_message(bigint)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_bigint'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(bigint) IS 'Add numeric field to message';
 
 CREATE FUNCTION dbms_pipe.pack_message(bytea)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_bytea'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(bytea) IS 'Add bytea field to message';
 
 CREATE FUNCTION dbms_pipe.unpack_message_bytea()
 RETURNS bytea
 AS 'MODULE_PATHNAME','dbms_pipe_unpack_message_bytea'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unpack_message_bytea() IS 'Get bytea field from message';
 
 CREATE FUNCTION dbms_pipe.pack_message(record)
 RETURNS void
 AS 'MODULE_PATHNAME','dbms_pipe_pack_message_record'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.pack_message(record) IS 'Add record field to message';
 
 CREATE FUNCTION dbms_pipe.unpack_message_record()
 RETURNS record
 AS 'MODULE_PATHNAME','dbms_pipe_unpack_message_record'
-LANGUAGE C VOLATILE STRICT;
+LANGUAGE C VOLATILE STRICT EXECUTE ON MASTER;
 COMMENT ON FUNCTION dbms_pipe.unpack_message_record() IS 'Get record field from message';
 
 
