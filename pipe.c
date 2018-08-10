@@ -161,8 +161,8 @@ LWLockId shmem_lockid = NOT_INITIALIZED;;
 
 unsigned int sid;                                 /* session id */
 
-extern alert_event *events;
-extern alert_lock  *locks;
+alert_event *events;
+alert_lock  *locks;
 
 /*
  * write on writer size bytes from ptr

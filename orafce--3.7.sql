@@ -1203,63 +1203,8 @@ AS $$ SELECT TRANSLATE($1, 'A'||$2, 'A'); $$
 LANGUAGE SQL IMMUTABLE STRICT;
 COMMENT ON FUNCTION plvchr.stripped(text, text) IS 'Strips a string of all instances of the specified characters';
 
--- dbms_alert
-
-CREATE SCHEMA dbms_alert;
-
-CREATE FUNCTION dbms_alert.register(name text)
-RETURNS void
-AS 'MODULE_PATHNAME','dbms_alert_register'
-LANGUAGE C VOLATILE STRICT;
-COMMENT ON FUNCTION dbms_alert.register(text) IS 'Register session as recipient of alert name';
-
-CREATE FUNCTION dbms_alert.remove(name text)
-RETURNS void
-AS 'MODULE_PATHNAME','dbms_alert_remove'
-LANGUAGE C VOLATILE STRICT;
-COMMENT ON FUNCTION dbms_alert.remove(text) IS 'Remove session as recipient of alert name';
-
-CREATE FUNCTION dbms_alert.removeall()
-RETURNS void
-AS 'MODULE_PATHNAME','dbms_alert_removeall'
-LANGUAGE C VOLATILE;
-COMMENT ON FUNCTION dbms_alert.removeall() IS 'Remove registration for all alerts';
-
-CREATE FUNCTION dbms_alert._signal(name text, message text)
-RETURNS void
-AS 'MODULE_PATHNAME','dbms_alert_signal'
-LANGUAGE C VOLATILE;
-COMMENT ON FUNCTION dbms_alert._signal(text, text) IS '';
-
-CREATE FUNCTION dbms_alert.waitany(OUT name text, OUT message text, OUT status integer, timeout float8)
-RETURNS record
-AS 'MODULE_PATHNAME','dbms_alert_waitany'
-LANGUAGE C VOLATILE;
-COMMENT ON FUNCTION dbms_alert.waitany(OUT text, OUT text, OUT integer, float8) IS 'Wait for any signal';
-
-CREATE FUNCTION dbms_alert.waitone(name text, OUT message text, OUT status integer, timeout float8)
-RETURNS record
-AS 'MODULE_PATHNAME','dbms_alert_waitone'
-LANGUAGE C VOLATILE;
-COMMENT ON FUNCTION dbms_alert.waitone(text, OUT text, OUT integer, float8) IS 'Wait for specific signal';
-
-CREATE FUNCTION dbms_alert.set_defaults(sensitivity float8)
-RETURNS void
-AS 'MODULE_PATHNAME','dbms_alert_set_defaults'
-LANGUAGE C VOLATILE;
-COMMENT ON FUNCTION dbms_alert.set_defaults(float8) IS '';
-
-CREATE FUNCTION dbms_alert.defered_signal()
-RETURNS trigger
-AS 'MODULE_PATHNAME','dbms_alert_defered_signal'
-LANGUAGE C SECURITY DEFINER;
-REVOKE ALL ON FUNCTION dbms_alert.defered_signal() FROM PUBLIC;
-
-CREATE FUNCTION dbms_alert.signal(_event text, _message text)
-RETURNS void
-AS 'MODULE_PATHNAME','dbms_alert_signal'
-LANGUAGE C SECURITY DEFINER;
-COMMENT ON FUNCTION dbms_alert.signal(text, text) IS 'Emit signal to all recipients';
+-- dbms_alert is removed in GPDB because it is not possible to run it in MPP
+-- environments as implemented in postgres.
 
 CREATE SCHEMA plvsubst;
 
@@ -2968,7 +2913,6 @@ STRICT IMMUTABLE
 ;
 
 GRANT USAGE ON SCHEMA dbms_pipe TO PUBLIC;
-GRANT USAGE ON SCHEMA dbms_alert TO PUBLIC;
 GRANT USAGE ON SCHEMA plvdate TO PUBLIC;
 GRANT USAGE ON SCHEMA plvstr TO PUBLIC;
 GRANT USAGE ON SCHEMA plvchr TO PUBLIC;
