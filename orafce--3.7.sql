@@ -2005,9 +2005,13 @@ CREATE CAST (interval AS varchar2)
 WITH INOUT
 AS IMPLICIT;
 
+SET allow_system_table_mods='dml';
+
 UPDATE pg_proc
 SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
 WHERE proname='varchar2';
+
+RESET allow_system_table_mods;
 
 -- string functions for varchar2 type
 -- these are 'byte' versions of corresponsing text/varchar functions
@@ -2208,9 +2212,13 @@ CREATE CAST (interval AS nvarchar2)
 WITH INOUT
 AS IMPLICIT;
 
+SET allow_system_table_mods='dml';
+
 UPDATE pg_proc
 SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
 WHERE proname='nvarchar2';
+
+RESET allow_system_table_mods;
 
 /* PAD */
 
