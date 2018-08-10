@@ -11,8 +11,6 @@
 #include "orafce.h"
 #include "builtins.h"
 
-#define ENABLE_INTERNATIONALIZED_WEEKDAY
-
 #ifdef ENABLE_INTERNATIONALIZED_WEEKDAY
 
 typedef struct WeekDays

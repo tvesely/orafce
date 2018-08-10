@@ -331,11 +331,7 @@ SELECT next_day ('2008-01-01', 'sun');
 (1 row)
 
 SELECT next_day ('2008-01-01', 'sunAAA');
-  next_day  
-------------
- 2008-01-06
-(1 row)
-
+ERROR:  invalid day name "sunAAA"
 SELECT next_day ('2008-01-01', 1);
   next_day  
 ------------
@@ -374,11 +370,8 @@ SELECT next_day ('2008-01-01 111343', 'sun');
 (1 row)
 
 SELECT next_day ('2008-01-01 121212', 'sunAAA');
-      next_day       
----------------------
- 2008-01-06 12:12:12
-(1 row)
-
+ERROR:  invalid day name "sunAAA"
+CONTEXT:  SQL function "next_day" statement 1
 SELECT next_day ('2008-01-01 111213', 1);
       next_day       
 ---------------------
