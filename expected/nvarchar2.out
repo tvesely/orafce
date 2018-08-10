@@ -11,11 +11,13 @@ CREATE TABLE bar (a NVARCHAR2(10, 1));
 ERROR:  invalid type modifier at character 21
 -- OK
 CREATE TABLE bar (a VARCHAR(5000));
+NOTICE:  Table doesn't have 'DISTRIBUTED BY' clause -- Using column named 'a' as the Greenplum Database data distribution key for this table.
 CREATE INDEX ON bar(a);
 -- cleanup
 DROP TABLE bar;
 -- OK
 CREATE TABLE bar (a NVARCHAR2(5));
+NOTICE:  Table doesn't have 'DISTRIBUTED BY' clause, and no column type is suitable for a distribution key. Creating a NULL policy entry.
 --
 -- test that no value longer than maxlen is allowed
 --
