@@ -13,6 +13,7 @@
 
 #include "parser/keywords.h"
 
+#endif
 /* GPDB_92_MERGE_FIXME put this back if there are unused symbol warnings */
 #if 0
 #ifdef GP_VERSION_NUM
