@@ -11,7 +11,7 @@ PG_CONFIG ?= pg_config
 # make "all" the default target
 all:
 
-REGRESS = orafce orafce2 dbms_output dbms_utility files varchar2 nvarchar2 aggregates nlssort dbms_random
+REGRESS = orafce dbms_output dbms_utility files varchar2 nvarchar2 aggregates nlssort dbms_random
 
 REGRESS_OPTS =  --schedule=parallel_schedule --encoding=utf8
 
