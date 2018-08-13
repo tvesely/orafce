@@ -14,14 +14,6 @@
 #include "parser/keywords.h"
 
 #endif
-/* GPDB_92_MERGE_FIXME put this back if there are unused symbol warnings */
-#if 0
-#ifdef GP_VERSION_NUM
-#define YY_NO_INPUT 1
-#endif
-
-#undef yyparse  /* don't need it now and solve problems with 8.1 */
-#endif
 
 #include "parser/gramparse.h"
 /* Not needed now that this file is compiled as part of gram.y */

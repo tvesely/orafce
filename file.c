@@ -626,10 +626,10 @@ utl_file_putf(PG_FUNCTION_ARGS)
 	char   *format;
 	int		max_linesize = 0;
 	int		encoding = 0;
-	int		format_length;
+	size_t		format_length;
 	char   *fpt;
 	int		cur_par = 0;
-	int		cur_len = 0;
+	size_t		cur_len = 0;
 
 	CHECK_FILE_HANDLE();
 	f = get_stream(PG_GETARG_INT32(0), &max_linesize, &encoding);
@@ -789,12 +789,6 @@ check_secure_locality(const char *path)
 	Oid		argtypes[] = {TEXTOID};
 	Datum	values[1];
 	char	nulls[1] = {' '};
-
-	/* GPDB_92_MERGE_FIXME Is this still needed for the availability regress test?
-	 * (it is not in upstream orafce */
-	/* hack for availbility regress test */
-	if (strcmp(path, "/tmp/regress_orafce") == 0)
-		return;
 
 	values[0] = CStringGetTextDatum(path);
 

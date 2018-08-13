@@ -158,7 +158,7 @@ align_size(size_t size)
 }
 
 /*
-  inicialize shared memory. It works in two modes, create and no create.
+  initialize shared memory. It works in two modes, create and no create.
   No create is used for mounting shared memory buffer. Top of memory is
   used for list_item array.
 */
