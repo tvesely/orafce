@@ -93,10 +93,25 @@ AS $$ SELECT pg_catalog.nlssort($1, null); $$
 LANGUAGE SQL IMMUTABLE STRICT;
 COMMENT ON FUNCTION pg_catalog.nlssort(text)IS '';
 
-CREATE FUNCTION pg_catalog.set_nls_sort(text)
+CREATE FUNCTION pg_catalog._set_nls_sort_master(text)
 RETURNS void
 AS 'MODULE_PATHNAME', 'ora_set_nls_sort'
-LANGUAGE C IMMUTABLE STRICT;
+LANGUAGE C IMMUTABLE STRICT EXECUTE ON MASTER;
+COMMENT ON FUNCTION pg_catalog._set_nls_sort_master(text) IS '';
+
+CREATE FUNCTION pg_catalog._set_nls_sort_segments(text)
+RETURNS void
+AS 'MODULE_PATHNAME', 'ora_set_nls_sort'
+LANGUAGE C IMMUTABLE STRICT EXECUTE ON ALL SEGMENTS;
+COMMENT ON FUNCTION pg_catalog._set_nls_sort_segments(text) IS '';
+
+CREATE FUNCTION pg_catalog.set_nls_sort(text)
+RETURNS void
+AS $$
+SELECT pg_catalog._set_nls_sort_master($1);
+SELECT pg_catalog._set_nls_sort_segments($1);
+$$
+LANGUAGE SQL IMMUTABLE STRICT;
 COMMENT ON FUNCTION pg_catalog.set_nls_sort(text) IS '';
 
 CREATE FUNCTION pg_catalog.instr(str text, patt text, start int, nth int)
