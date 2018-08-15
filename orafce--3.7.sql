@@ -1950,7 +1950,7 @@ CREATE CAST (interval AS varchar2)
 WITH INOUT
 AS IMPLICIT;
 
-SET allow_system_table_mods='dml';
+SET allow_system_table_mods=true;
 
 UPDATE pg_proc
 SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
@@ -2157,7 +2157,7 @@ CREATE CAST (interval AS nvarchar2)
 WITH INOUT
 AS IMPLICIT;
 
-SET allow_system_table_mods='dml';
+SET allow_system_table_mods=true;
 
 UPDATE pg_proc
 SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
