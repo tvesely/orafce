@@ -108,6 +108,14 @@ ora_nvl2(PG_FUNCTION_ARGS)
 
 PG_FUNCTION_INFO_V1(ora_set_nls_sort);
 
+/*
+ * GPDB_92_MERGE_FIXME: This function sets a global value on a backend. This
+ * works in Postgres, because your session will always have the same backend.
+ * In GPDB we have slices, and this is not necessarily going to run on the
+ * slice that drives the SORT operation. The NLS sort functions either need to
+ * be removed, or this needs to have a global state- possibly implemented as a
+ * replicated temp table?
+ */
 Datum
 ora_set_nls_sort(PG_FUNCTION_ARGS)
 {
