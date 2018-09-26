@@ -3062,35 +3062,34 @@ create view oracle.product_component_version as
            oracle.get_platform() || ' ' || oracle.get_status()
       from pg_extension;
 
--- GPDB_93_MERGE_FIXME "relispopulated" comes in 9.3, so enable this view then
--- create view oracle.user_objects as
---     select relname as object_name,
---            null::text as subject_name,
---            c.oid as object_id,
---            case relkind when 'r' then 'TABLE'
---                         when 'i' then 'INDEX'
---                         when 'S' then 'SEQUENCE'
---                         when 'v' then 'VIEW'
---                         when 'm' then 'VIEW'
---                         when 'f' then 'FOREIGN TABLE' end as object_type,
---            null::timestamp(0) as created,
---            null::timestamp(0) as last_ddl_time,
---            case when relkind = 'i' then (select case when indisvalid then 'VALID' else 'INVALID' end
---                                           from pg_index
---                                          where indexrelid = c.oid)
---                                    else case when relispopulated then 'VALID' else 'INVALID' end end as status,
---            relnamespace as namespace
---       from pg_class c join pg_namespace n on c.relnamespace = n.oid
---      where relkind not in  ('t','c')
---        and nspname not in ('pg_toast','pg_catalog','information_schema')
---     union all
---     select tgname, null, t.oid, 'TRIGGER',null, null,'VALID', relnamespace
---       from pg_trigger t join pg_class c on t.tgrelid = c.oid
---      where not tgisinternal
---     union all
---     select proname, null, p.oid, 'FUNCTION', null, null, 'VALID', pronamespace
---       from pg_proc p join pg_namespace n on p.pronamespace = n.oid
---      where nspname not in ('pg_toast','pg_catalog','information_schema') order by 1;
+create view oracle.user_objects as
+    select relname as object_name,
+           null::text as subject_name,
+           c.oid as object_id,
+           case relkind when 'r' then 'TABLE'
+                        when 'i' then 'INDEX'
+                        when 'S' then 'SEQUENCE'
+                        when 'v' then 'VIEW'
+                        when 'm' then 'VIEW'
+                        when 'f' then 'FOREIGN TABLE' end as object_type,
+           null::timestamp(0) as created,
+           null::timestamp(0) as last_ddl_time,
+           case when relkind = 'i' then (select case when indisvalid then 'VALID' else 'INVALID' end
+                                          from pg_index
+                                         where indexrelid = c.oid)
+                                   else case when relispopulated then 'VALID' else 'INVALID' end end as status,
+           relnamespace as namespace
+      from pg_class c join pg_namespace n on c.relnamespace = n.oid
+     where relkind not in  ('t','c')
+       and nspname not in ('pg_toast','pg_catalog','information_schema')
+    union all
+    select tgname, null, t.oid, 'TRIGGER',null, null,'VALID', relnamespace
+      from pg_trigger t join pg_class c on t.tgrelid = c.oid
+     where not tgisinternal
+    union all
+    select proname, null, p.oid, 'FUNCTION', null, null, 'VALID', pronamespace
+      from pg_proc p join pg_namespace n on p.pronamespace = n.oid
+     where nspname not in ('pg_toast','pg_catalog','information_schema') order by 1;
 
 create view oracle.user_procedures as
     select proname as object_name
