@@ -1965,13 +1965,19 @@ CREATE CAST (interval AS varchar2)
 WITH INOUT
 AS IMPLICIT;
 
-SET allow_system_table_mods=true;
+-- XXX: This is disabled in gpdb because we have no way of dispatching this
+-- change to the segments. There is no DDL to support setting a protransform
+-- function in upstream, because of security concerns. We need to understand
+-- exactly what these security concerns are, and have a strategy to deal with
+-- the (probably rare) cases where a user might want to use this feature in
+-- GPDB.
+--SET allow_system_table_mods=true;
 
-UPDATE pg_proc
-SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
-WHERE proname='varchar2';
+--UPDATE pg_proc
+--SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
+--WHERE proname='varchar2';
 
-RESET allow_system_table_mods;
+--RESET allow_system_table_mods;
 
 -- string functions for varchar2 type
 -- these are 'byte' versions of corresponsing text/varchar functions
@@ -2172,13 +2178,13 @@ CREATE CAST (interval AS nvarchar2)
 WITH INOUT
 AS IMPLICIT;
 
-SET allow_system_table_mods=true;
+-- SET allow_system_table_mods=true;
 
-UPDATE pg_proc
-SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
-WHERE proname='nvarchar2';
+-- UPDATE pg_proc
+-- SET protransform=(SELECT oid FROM pg_proc WHERE proname='varchar2_transform')
+-- WHERE proname='nvarchar2';
 
-RESET allow_system_table_mods;
+-- RESET allow_system_table_mods;
 
 /* PAD */
 
