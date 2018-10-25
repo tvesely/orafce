@@ -11,7 +11,7 @@ PG_CONFIG ?= pg_config
 # make "all" the default target
 all:
 
-REGRESS = orafce dbms_output dbms_utility files varchar2 nvarchar2 aggregates nlssort dbms_random
+REGRESS = orafce dbms_output dbms_utility files varchar2 nvarchar2 aggregates dbms_random
 
 REGRESS_OPTS =  --schedule=parallel_schedule --encoding=utf8
 
@@ -28,6 +28,10 @@ else
 PG_CONFIG = pg_config
 PGXS := $(shell $(PG_CONFIG) --pgxs)
 include $(PGXS)
+endif
+
+ifneq ($(PORTNAME), darwin)
+REGRESS += nlssort
 endif
 
 ifeq ($(enable_nls), yes)
